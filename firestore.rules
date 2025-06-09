@@ -1,0 +1,151 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow create: if 
+        request.auth != null 
+        && request.auth.uid == userId;
+      
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+      
+      allow update: if isOwner(userId);      
+      allow delete: if isOwner(userId) && request.resource.data.isDeleted == true;
+
+      // User's orders subcollection
+      match /orders/{orderId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // User's favorites subcollection
+      match /favorites/{favoriteId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // User's cart subcollection
+      match /cart/{cartId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // User's liked restaurants
+      match /likedRestaurants/{restaurantId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // User's liked posts
+      match /likedPosts/{postId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // --- Users SubCollection ---
+    match /users/{userId}/likedRestaurants/{restaurantId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // --- Users SubCollection ---
+    match /users/{userId}/likedPosts/{postId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // --- Owners Collection ---
+    match /owners/{ownerId} {
+      allow create: if 
+        request.auth != null
+        && request.auth.uid == ownerId
+        && request.resource.data.keys().hasAll(['name', 'email', 'restaurantName', 'restaurantAddress'])
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.restaurantName is string
+        && request.resource.data.restaurantAddress is string;
+      
+      allow read: if isOwner(ownerId) || isAdmin();
+      
+      allow update: if 
+        (isOwner(ownerId))
+        || (isAdmin() && request.resource.data.keys().hasOnly(['verified']));
+      
+      allow delete: if isAdmin() && request.resource.data.isDeleted == true;
+    }
+    
+    // --- Restaurants Collection ---
+    match /restaurants/{restaurantId} {
+      allow create: if isAuthenticated();
+      allow read: if true;
+      
+      allow update: if isOwner(resource.data.ownerId);
+      allow delete: if isAdmin() && resource.data.status == 'closed';
+
+      // --- Menu Subcollection ---
+      match /menu/{menuItemId} {
+        allow read: if true;
+        allow create, update, delete: if 
+          isOwner(get(/databases/$(database)/documents/restaurants/$(restaurantId)).data.ownerId);
+      }
+
+      // --- Orders Subcollection ---
+      match /orders/{orderId} {
+        allow create: if isAuthenticated();
+        allow read: if isAuthenticated();
+        allow update: if isAuthenticated();
+      }
+
+      // --- Analytics Subcollection ---
+      match /analytics/{analyticId} {
+        allow read, write: if true;
+      }
+
+      // --- Reviews Subcollection ---
+      match /reviews/{reviewId} {
+        allow read, write: if true;
+      }
+
+      // --- Events Subcollection ---
+      match /events/{eventId} {
+        allow read: if true;
+        allow create, update: if 
+          isOwner(get(/databases/$(database)/documents/restaurants/$(restaurantId)).data.ownerId) &&
+          request.resource.data.keys().hasAll(['title', 'date', 'description']) &&
+          request.resource.data.date is timestamp;
+      }
+    }
+    
+    // --- Categories Collection ---
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // --- Posts Collection ---
+    match /posts/{postId} {
+      allow read, write: if true;
+      
+      match /comments/{commentId} {
+        allow read, write: if true;
+      }
+    }
+
+    // --- Helper Functions ---
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+
+    function getParentData(field) {
+      return get(/databases/$(database)/documents/$(resource.data.parentPath)).data[field];
+    }
+  }
+} 
