@@ -11,7 +11,7 @@ export default function AboutRestaurantSection({ restaurantData }) {
   ];
 
   return (
-    <section id="about" className="min-h-screen py-16 bg-white">
+    <section id="about" className="py-24 bg-white mb-10">
       <div className="container xl:max-w-[80%] mx-auto px-4">
         <SectionHeading title="About Us" />
         

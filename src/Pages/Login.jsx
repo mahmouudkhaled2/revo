@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import GoogleIcon from './../assets/images/google-color-svgrepo-com.svg'
-import FacebookIcon from './../assets/images/facebook-1-svgrepo-com.svg'
+// import GoogleIcon from './../assets/images/google-color-svgrepo-com.svg'
+// import FacebookIcon from './../assets/images/facebook-1-svgrepo-com.svg'
 import LoginForm from '../Components/LoginForm';
 
 export default function Login() {
@@ -19,7 +19,7 @@ export default function Login() {
         </h2>
 
         {/* Login Buttons for Google & Facebook */}
-        <button className="w-full flex justify-center items-center gap-8 border border-[#00000080] text-[#0D0C0C] font-Grotesk font-medium py-2 mb-4">
+        {/* <button className="w-full flex justify-center items-center gap-8 border border-[#00000080] text-[#0D0C0C] font-Grotesk font-medium py-2 mb-4">
           <img src={GoogleIcon} alt="Google Icon" width={25} />
           Continue with Google
         </button>
@@ -27,13 +27,13 @@ export default function Login() {
         <button className="w-full flex justify-center items-center gap-5 bg-blue-800 text-white py-2 mb-4 hover:bg-blue-900 border border-blue-800">
           <img src={FacebookIcon} alt="Facebook Icon" width={25} /> 
           Continue with Facebook
-        </button>
+        </button> */}
 
-        <div className="relative text-center text-[#000000] my-4">
+        {/* <div className="relative text-center text-[#000000] my-4">
           <span className="before:absolute before:left-0 before:top-1/2 before:w-[45%] before:h-[0.5px] before:bg-[#000000] before:-translate-y-1/2 after:absolute after:right-0 after:top-1/2 after:w-[45%] after:h-[0.5px] after:bg-[#000000] after:-translate-y-1/2">
             OR
           </span>
-        </div>
+        </div> */}
 
         {/* Login Form */}
         <LoginForm onSuccess={handleLoginSuccess} />

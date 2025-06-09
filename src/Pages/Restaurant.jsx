@@ -1,3 +1,4 @@
+
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
@@ -5,39 +6,59 @@ import { useParams } from "react-router-dom";
 import AboutRestaurantSection from "../Components/Restaurant/about-restuarant";
 import SectionHeading from "../Components/Restaurant/section-heading";
 import MenuSection from "./RestaurantMenu";
-import Post from "../Components/Post";
 import { MdEmail } from "react-icons/md";
-import { FaLocationDot } from "react-icons/fa6";
+import { FaLocationDot, FaPhone } from "react-icons/fa6";
+import { motion, AnimatePresence } from "framer-motion";
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase-config';
 
-// Replace the NavItem component with this improved version that has smooth transitions
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import { addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from "../Context/AuthProvider";
+import Cart from "../Components/Cart/Cart";
+
+// NavItem component with smooth transitions
 const NavItem = ({ label, href, active = false }) => {
   const handleClick = (e) => {
     e.preventDefault();
     const targetId = href.substring(1);
     const targetElement = document.getElementById(targetId);
+
     if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth" });
+      const yOffset = -170; // مقدار الإزاحة من الأعلى
+      const y =
+        targetElement.getBoundingClientRect().top + window.scrollY + yOffset;
+
+      window.scrollTo({ top: y, behavior: "smooth" });
     }
   };
 
   return (
-    <a
+    <motion.a
       href={href}
       onClick={handleClick}
-      className={`text-white hover:opacity-80 transition-opacity py-2 text-sm md:text-base relative
-        after:absolute after:content-[''] after:w-full after:h-1.5 after:bg-white after:bottom-0 after:left-0 after:z-20 
-        after:transition-all after:duration-300 after:ease-in-out
-        ${active ? "after:opacity-100" : "after:opacity-0"}`}
+      className={`text-white hover:opacity-80 transition-all py-2 text-sm md:text-base relative`}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
     >
       {label}
-    </a>
+      <motion.div
+        className="absolute bottom-0 left-0 h-1 bg-[#F27141] w-full"
+        initial={false}
+        animate={{
+          scaleX: active ? 1 : 0,
+          opacity: active ? 1 : 0,
+        }}
+        transition={{ duration: 0.2 }}
+      />
+    </motion.a>
   );
 };
 
-const RestaurantNavbar = ({ activeSection }) => {
-  const [showMenu, setShowMenu] = useState(false);
 
-  const { restaurant } = useParams();
+const RestaurantNavbar = ({ activeSection, restaurantData }) => {
+  const [showMenu, setShowMenu] = useState(false);
 
   const navItems = [
     { label: "About Us", href: "#about", id: "about" },
@@ -47,25 +68,26 @@ const RestaurantNavbar = ({ activeSection }) => {
   ];
 
   return (
-    <header className="fixed top-[100px] left-0 right-0 z-20 bg-black bg-opacity-70">
-      <nav className="container xl:max-w-[80%] mx-auto py-4 px-4 flex items-center justify-between gap-20">
-        <div className="flex items-center gap-3">
-          <img
-            src="/assets/hagoga-logo.png"
-            alt="Hagogah Logo"
-            className="size-14 rounded-full object-cover"
-          />
-          <span className="text-white text-xl font-medium font-Inter">
-            {restaurant}
-          </span>
-        </div>
+    <header className="bg-black/80 backdrop-blur-sm fixed w-full z-30">
+      <nav className="container xl:max-w-[80%] mx-auto py-4 px-4">
+        <div className="flex items-center justify-between">
+          <motion.div 
+            className="flex items-center gap-3"
+            whileHover={{ scale: 1.05 }}
+          >
+            <img
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              src={restaurantData?.logoUrl}
+              alt={`${restaurantData?.name} Logo`}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <span className="text-white text-xl font-medium">{restaurantData?.name}</span>
+          </motion.div>
 
-        <div
-          className={`absolute md:static top-[85px] start-0 end-0 w-full flex-1 items-center justify-between md:flex md:w-auto md:order-1 transition-all overflow-hidden ${
-            showMenu ? "h-[300px]" : "h-[0px]"
-          } md:h-auto`}
-        >
-          <div className="flex flex-col flex-1 items-center md:justify-between gap-5 xl:gap-10 bg-black bg-opacity-75 h-full md:bg-transparent p-4 md:p-0 font-bold rounded-b-lg md:space-x-6 rtl:space-x-reverse md:flex-row md:mt-0">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-10 space-x-8">
             {navItems.map((item) => (
               <NavItem
                 key={item.id}
@@ -75,185 +97,406 @@ const RestaurantNavbar = ({ activeSection }) => {
               />
             ))}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden text-white"
+            onClick={() => setShowMenu(!showMenu)}
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              {showMenu ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
         </div>
 
-        <button
-          id="menuToggler"
-          className="text-white text-3xl cursor-pointer m-0 md:hidden"
-          onClick={() => setShowMenu(!showMenu)}
-        >
-          <i className="fa-solid fa-bars"></i>
-        </button>
+        {/* Mobile Navigation */}
+        <AnimatePresence>
+          {showMenu && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden mt-4"
+            >
+              <div className="flex flex-col space-y-4">
+                {navItems.map((item) => (
+                  <NavItem
+                    key={item.id}
+                    label={item.label}
+                    href={item.href}
+                    active={activeSection === item.id}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
     </header>
   );
 };
 
-const HeroSection = () => {
-  const { restaurant } = useParams();
+const HeroSection = ({ restaurantData }) => {
   return (
-    <div className="relative h-[400px] md:h-[480px] overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0 w-full h-full">
+    <div className="relative h-screen">
+      <div className="absolute inset-0">
         <img
-          src="/assets/hero-bg.jpg"
-          alt="Hagogah Restaurant"
+          src={restaurantData?.coverUrl || restaurantData?.image}
+          alt="Restaurant Hero"
           className="w-full h-full object-cover"
         />
-        {/* Overlay for better text visibility */}
-        <div className="absolute z-10 inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full text-white px-4">
-        <h1 className="text-4xl md:text-5xl font-bold font-Inria mb-8">
-          {restaurant || "Hagogah"}
-        </h1>
-
-        {/* Slider Dots */}
-        <div className="flex items-center gap-7 mb-10">
-          <span
-            className={`relative block size-5 rounded-full transition-all border-2 border-white before:content-[''] before:absolute before:h-[2px] before:w-[100px] before:bg-white before:right-full before:top-1/2 before:translate-y-[-50%] before:z-50`}
-          />
-          <span
-            className={`relative block size-5 rounded-full transition-all border-2 border-white before:content-[''] before:absolute before:h-[2px] before:w-[100px] before:bg-white before:left-full before:top-1/2 before:translate-y-[-50%] before:z-50`}
-          />
-        </div>
-
-        <div className="max-w-2xl text-center">
-          <p className="text-lg md:text-xl font-Inria">
-            Enjoy homemade and rural cuisine in the atmosphere of Ramadan.
-          </p>
-        </div>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="relative z-10 h-full flex flex-col items-center justify-center text-white px-4"
+      >
+        <motion.h1 
+          className="text-5xl md:text-7xl font-bold mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          {restaurantData?.name}
+        </motion.h1>
+        <motion.p 
+          className="text-xl md:text-2xl text-center max-w-2xl"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+        >
+          {restaurantData?.slogan || "Experience the finest traditional cuisine with a modern twist"}
+        </motion.p>
+      </motion.div>
     </div>
   );
 };
 
-const ReviewsSection = () => {
+const ReviewsSection = ({ restaurantId }) => {
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newReview, setNewReview] = useState('');
+  const [rating, setRating] = useState(5);
+  const [submitting, setSubmitting] = useState(false);
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const reviewsRef = collection(db, 'restaurants', restaurantId, 'comments');
+        const q = query(reviewsRef, orderBy('createdAt', 'desc'));
+        const reviewsSnapshot = await getDocs(q);
+        const reviewsData = reviewsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setReviews(reviewsData);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (restaurantId) {
+      fetchReviews();
+    }
+  }, [restaurantId]);
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+
+    if (!newReview.trim()) {
+      toast.error('Please write your review');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const reviewData = {
+        userId: currentUser.uid,
+        userName: currentUser.displayName || 'Anonymous',
+        userImage: currentUser.photoURL || '/assets/default-avatar.png',
+        comment: newReview.trim(),
+        rating,
+        createdAt: serverTimestamp()
+      };
+
+      const reviewsRef = collection(db, 'restaurants', restaurantId, 'comments');
+      const docRef = await addDoc(reviewsRef, reviewData);
+
+      // Add the new review to the state
+      setReviews(prev => [{
+        id: docRef.id,
+        ...reviewData,
+        createdAt: new Date() // For immediate display
+      }, ...prev]);
+
+      setNewReview('');
+      setRating(5);
+      toast.success('Review submitted successfully!');
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      toast.error('Failed to submit review. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F27141]"></div>
+      </div>
+    );
+  }
+
   return (
-    <section id="reviews" className="min-h-screen flex items-center justify-center py-10 relative">
-      <div className="text-center">
-        <SectionHeading title={"Reviews"}/>
-        <div className="container 2xl:max-w-[80%] mx-auto ps-20">
-          <Post />
+    <section id="reviews" className="min-h-screen py-16 bg-gray-50">
+      <div className="container xl:max-w-[80%] mx-auto px-4">
+        <SectionHeading title="Customer Reviews" />
+        
+        {/* Review Form */}
+        <div className="max-w-2xl mx-auto mb-12 bg-white p-6 rounded-lg shadow-md">
+          <form onSubmit={handleSubmitReview} className="space-y-4">
+            <div>
+              <label className="block text-gray-700 mb-2">Rating</label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    className="text-2xl focus:outline-none"
+                  >
+                    {star <= rating ? '★' : '☆'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Your Review</label>
+              <textarea
+                value={newReview}
+                onChange={(e) => setNewReview(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27141]"
+                rows="4"
+                placeholder="Share your experience..."
+                disabled={submitting}
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              disabled={submitting}
+              className={`w-full py-2 rounded-lg bg-[#F27141] text-white font-medium 
+                ${submitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#e05f35]'} 
+                transition-colors`}
+            >
+              {submitting ? 'Submitting...' : 'Submit Review'}
+            </button>
+          </form>
         </div>
 
-        <button className="w-fit mx-auto border-none outline-none bg-transparent text-zinc-800 font-semibold underline mt-10">
-          See more...
-        </button>
+        {/* Reviews List */}
+        <div className="mt-12 space-y-6">
+          {reviews.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              No reviews yet. Be the first to review!
+            </div>
+          ) : (
+            reviews.map((review) => (
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white p-6 rounded-lg shadow-md"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <img
+                    src={review.userImage}
+                    alt={review.userName}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div>
+                    <h4 className="font-medium text-gray-900">{review.userName}</h4>
+                    <div className="flex items-center gap-2">
+                      <div className="text-yellow-400">
+                        {'★'.repeat(review.rating)}
+                        {'☆'.repeat(5 - review.rating)}
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {review.createdAt?.toDate().toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-gray-600">{review.comment}</p>
+              </motion.div>
+            ))
+          )}
+        </div>
       </div>
-
-      <img src="/public/assets/" alt="" />
     </section>
   );
 };
 
-const ContactSection = () => {
+const ContactSection = ({ restaurantData }) => {
   return (
-    <section id="contact" className="flex items-center justify-center pt-10 relative">
-      <div className="text-center">
-        <SectionHeading title={"Contacts and Location"} classes="mb-10"/>
-        <div className="container xl:max-w-[80%] mx-auto">
-          {/* Text */}
-          <div className="flex gap-3 mb-10">
-            <img
-              src="/assets/hagoga-logo.png"
-              alt="Hagogah Logo"
-              className="size-14 rounded-full object-cover"
-            />
-            <p className="flex-1 text-centerr ">
-              We are here to take you on an enjoyable and delicious journey
-              through the world of authentic and innovative cuisine. At Hajouja
-              Restaurant, we offer you a taste of home and the spirit of the
-              countryside, with a touch of creativity and innovation in every
-              dish.
+    <section id="contact" className="min-h-screen py-16 bg-white relative overflow-hidden">
+      <div className="container xl:max-w-[80%] mx-auto px-4">
+        <SectionHeading title="Contact Us" />
+        
+        <div className="grid md:grid-cols-2 gap-12 mt-12">
+          {/* Contact Information */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="space-y-8"
+          >
+            <h3 className="text-2xl font-bold text-gray-900">Get in Touch</h3>
+            <p className="text-gray-600">
+              We&apos;d love to hear from you. Please feel free to contact us for any inquiries.
             </p>
-          </div>
-
-          <div className="h-[50vh] pt-10">
-            <div className="max-w-sm mx-auto flex flex-col gap-10">
-              {/* Emails */}
-              <div className="flex items-center gap-5">
-                <MdEmail size={25} className="text-[#f27141]" />
-                <div>
-                  <p>admin@Hagoga.com</p>
-                  <p>support@Hagoga.com</p>
+            
+            <div className="space-y-6">
+              {restaurantData?.email && (
+                <div className="flex items-center gap-4">
+                  <div className="bg-[#F27141] bg-opacity-10 p-3 rounded-full">
+                    <MdEmail className="text-[#F27141] text-xl" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Email Us</h4>
+                    <p className="text-gray-600">{restaurantData.email}</p>
+                  </div>
                 </div>
-              </div>
-
-              {/* Address */}
-              <div className="flex gap-5">
-                <FaLocationDot size={25} className="text-[#f27141]" />
-                <p>
-                  حديقة المدفعية، شارع الصاعقة، دخلة شيراتون من طريق السويس،
-                  امام موقف ٤ ونص مساكن
-                </p>
-              </div>
+              )}
+              
+              {restaurantData?.phone && (
+                <div className="flex items-center gap-4">
+                  <div className="bg-[#F27141] bg-opacity-10 p-3 rounded-full">
+                    <FaPhone className="text-[#F27141] text-xl" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Call Us</h4>
+                    <p className="text-gray-600">{restaurantData.phone}</p>
+                  </div>
+                </div>
+              )}
+              
+              {restaurantData?.address && (
+                <div className="flex items-center gap-4">
+                  <div className="bg-[#F27141] bg-opacity-10 p-3 rounded-full">
+                    <FaLocationDot className="text-[#F27141] text-xl" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">Visit Us</h4>
+                    <p className="text-gray-600">{restaurantData.address}</p>
+                  </div>
+                </div>
+              )}
             </div>
-             
-          </div>
+          </motion.div>
+
+          {/* Map */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="bg-gray-100 rounded-lg overflow-hidden h-[400px]"
+          >
+            {restaurantData?.image ? (
+              <img 
+                src={restaurantData.image} 
+                alt={restaurantData.name} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500">
+                Location image coming soon
+              </div>
+            )}
+          </motion.div>
         </div>
       </div>
-      <img src="/assets/footer-hagoga-bg.png" alt="" className="absolute w-[400px] bottom-0 left-0" />
     </section>
   );
 };
 
 export default function RestaurantPage() {
+  const { restaurant: restaurantId } = useParams();
   const [activeSection, setActiveSection] = useState("");
+  const [restaurantData, setRestaurantData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const sections = ["about", "menu", "reviews", "contact"];
   const sectionRefs = useRef({});
 
-  // Initialize section refs on component mount
   useEffect(() => {
-    // Set initial active section after a short delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      checkVisibleSections();
-    }, 100);
+    const fetchRestaurantData = async () => {
+      try {
+        const restaurantDoc = await getDoc(doc(db, "restaurants", restaurantId));
+        if (restaurantDoc.exists()) {
+          setRestaurantData({
+            id: restaurantDoc.id,
+            ...restaurantDoc.data()
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching restaurant data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return () => clearTimeout(timer);
-  }, []);
+    if (restaurantId) {
+      fetchRestaurantData();
+    }
+  }, [restaurantId]);
 
-  // In the RestaurantPage component, replace the intersection observer useEffect with:
   useEffect(() => {
-    // Use a more sophisticated approach with a debounce mechanism
-    let debounceTimer = null;
-    const debounceDelay = 50; // milliseconds
-
     const options = {
-      threshold: [0.2, 0.3, 0.4, 0.5], // Multiple thresholds for smoother transitions
-      rootMargin: "-100px 0px -100px 0px", // Adjust for navbar and hero section
+      threshold: [0.2, 0.3, 0.4, 0.5],
+      rootMargin: "-100px 0px -100px 0px",
     };
 
     const callback = (entries) => {
-      // Clear any existing timer
-      if (debounceTimer) clearTimeout(debounceTimer);
-
-      // Get all entries that are intersecting
-      const intersectingEntries = entries.filter(
-        (entry) => entry.isIntersecting
-      );
-
-      // If we have intersecting entries, set a timer to update the active section
-      if (intersectingEntries.length > 0) {
-        // Sort by intersection ratio (highest first)
-        intersectingEntries.sort(
-          (a, b) => b.intersectionRatio - a.intersectionRatio
-        );
-
-        // Use the entry with the highest intersection ratio
-        const topEntry = intersectingEntries[0];
-
-        debounceTimer = setTimeout(() => {
-          setActiveSection(topEntry.target.id);
-        }, debounceDelay);
-      }
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
     };
 
     const observer = new IntersectionObserver(callback, options);
 
-    // Observe all sections
     sections.forEach((section) => {
       const element = document.getElementById(section);
       if (element) {
@@ -263,85 +506,32 @@ export default function RestaurantPage() {
     });
 
     return () => {
-      // Cleanup observer
       sections.forEach((section) => {
         const element = document.getElementById(section);
         if (element) {
           observer.unobserve(element);
         }
       });
-      if (debounceTimer) clearTimeout(debounceTimer);
     };
   }, [sections]);
 
-  // Replace the checkVisibleSections function with this improved version
-  const checkVisibleSections = () => {
-    let maxVisibility = 0;
-    let mostVisibleSection = "";
-
-    // Find the section that's most visible
-    for (const section of sections) {
-      const element = document.getElementById(section);
-      if (element) {
-        const { offsetTop, offsetHeight } = element;
-        const sectionTop = offsetTop;
-        const sectionBottom = offsetTop + offsetHeight;
-
-        // Calculate how much of the section is visible
-        const visibleTop = Math.max(sectionTop, window.scrollY);
-        const visibleBottom = Math.min(
-          sectionBottom,
-          window.scrollY + window.innerHeight
-        );
-        const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-        const visibilityPercentage = visibleHeight / offsetHeight;
-
-        if (visibilityPercentage > maxVisibility) {
-          maxVisibility = visibilityPercentage;
-          mostVisibleSection = section;
-        }
-      }
-    }
-
-    // Only update if we found a visible section
-    if (mostVisibleSection) {
-      setActiveSection(mostVisibleSection);
-    } else if (!activeSection && sections.length > 0) {
-      // Default to first section if none are visible
-      setActiveSection(sections[0]);
-    }
-  };
-
-  // Replace the scroll event handler useEffect with this improved version
-  useEffect(() => {
-    let scrollTimer = null;
-    const scrollDelay = 100; // milliseconds
-
-    const handleScroll = () => {
-      // Clear previous timer
-      if (scrollTimer) clearTimeout(scrollTimer);
-
-      // Set a new timer
-      scrollTimer = setTimeout(() => {
-        checkVisibleSections();
-      }, scrollDelay);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (scrollTimer) clearTimeout(scrollTimer);
-    };
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F27141]"></div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <RestaurantNavbar activeSection={activeSection} />
-      <HeroSection />
-      <AboutRestaurantSection />
-      <MenuSection />
-      <ReviewsSection />
-      <ContactSection />
-    </>
+    <div className="bg-white">
+      <RestaurantNavbar activeSection={activeSection} restaurantData={restaurantData} />
+      <HeroSection restaurantData={restaurantData} />
+      <AboutRestaurantSection restaurantData={restaurantData} />
+      <MenuSection restaurantId={restaurantId} />
+      <ReviewsSection restaurantId={restaurantId} />
+      <ContactSection restaurantData={restaurantData} />
+      <Cart />
+    </div>
   );
 }

@@ -39,7 +39,6 @@ export default function Posts({ userType, userId }) {
 
         // If user is owner, only show their posts
         if (userType === 'owner' && userId) {
-          console.log("Filtering for owner:", userId); // Debug log
           baseQuery = query(
             collection(db, "posts"),
             orderBy("createdAt", "desc"),
@@ -111,6 +110,7 @@ export default function Posts({ userType, userId }) {
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
+    
     if (isHomePage) return; // Don't set up observer on home page
 
     const observer = new IntersectionObserver(
@@ -146,7 +146,7 @@ export default function Posts({ userType, userId }) {
           <div>
             {posts.length > 0 ? (
               <>
-                {posts.map((post) => (
+                {posts?.map((post) => (
                   <Post key={post.id} post={post} />
                 ))}
                 {!isHomePage && hasMore && (

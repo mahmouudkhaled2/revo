@@ -13,23 +13,44 @@ export default function Post({ post }) {
   const [isLiked, setIsLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [localLikes, setLocalLikes] = useState(post.likes || 0);
+  const [localLikes, setLocalLikes] = useState(post?.likes || 0);
   const [newComment, setNewComment] = useState('');
-  const [localComments, setLocalComments] = useState(post.comments || []);
+  const [localComments, setLocalComments] = useState(post?.comments || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [restaurantData, setRestaurantData] = useState(null);
   
   const { currentUser } = useContext(authContext);
 
-  const {
-    id,
-    restaurant_name,
-    restaurant_image,
-    description,
-    image,
-    createdAt,
-    comments = [],
-  } = post;
+  const id = post?.id;
+  const restaurantId = post?.restaurantId;
+  const restaurantName = post?.restaurantName;
+  const description = post?.description;
+  const image = `data:image/jpeg;base64,${post?.image}` ;
+  const restaurantImage = `data:image/jpeg;base64,${restaurantData?.logoUrl}` ;
+  const createdAt = post?.createdAt;
+  const comments = post?.comments;
+
+  useEffect(() => {
+    const fetchRestaurantData = async () => {
+      try {
+        const restaurantDoc = await getDoc(doc(db, "restaurants", restaurantId));
+        if (restaurantDoc.exists()) {
+          setRestaurantData({
+            id: restaurantDoc.id,
+            ...restaurantDoc.data()
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching restaurant data:", error);
+      }
+    };
+
+    if (restaurantId) {
+      fetchRestaurantData();
+    }
+    console.log("restaurantData: ", restaurantData);
+  }, [restaurantId, restaurantData]);
 
   // Check if the current user has liked this post
   useEffect(() => {
@@ -188,12 +209,12 @@ export default function Post({ post }) {
         {/* Restaurant Header */}
         <div className="p-4 flex items-center gap-4 border-b">
           <img 
-            src={restaurant_image} 
-            alt={restaurant_name}
+            src={restaurantImage} 
+            alt={restaurantName}
             className="w-12 h-12 rounded-full object-cover"
           />
           <div className="flex-1">
-            <h3 className='text-lg font-semibold text-gray-900'>{restaurant_name}</h3>
+            <h3 className='text-lg font-semibold text-gray-900'>{restaurantName}</h3>
             <p className='text-sm text-gray-500'>{timeAgo}</p>
           </div>
         </div>
@@ -230,7 +251,7 @@ export default function Post({ post }) {
               className="flex items-center gap-2 text-lg text-gray-600 hover:text-gray-800"
             >
               <FaRegComment className="text-2xl" />
-              <span>{comments.length}</span>
+              <span>{comments?.length}</span>
             </button>
           </div>
 
@@ -255,7 +276,7 @@ export default function Post({ post }) {
                   </p>
                 </div>
               </div>
-              {comments.length > 1 && (
+              {comments?.length > 1 && (
                 <button 
                   onClick={currentUser ? () => setShowComments(true) : () => setShowLoginModal(true)}
                   className="text-gray-500 text-sm mt-2 hover:text-gray-700"
@@ -283,8 +304,8 @@ export default function Post({ post }) {
             </div>
             
             <div className="overflow-y-auto p-4 max-h-[60vh]">
-              {localComments.length > 0 ? (
-                localComments.map((comment) => (
+              {localComments?.length > 0 ? (
+                localComments?.map((comment) => (
                   <div key={comment.id} className="flex items-start gap-3 mb-4">
                     <img 
                       src="/assets/images/default-user.png"

@@ -36,7 +36,7 @@ export default function MenuSection({ restaurantId }) {
         setMenuItems(items);
 
         // Extract unique categories
-        const uniqueCategories = [...new Set(items.map(item => item.category))];
+        const uniqueCategories = [...new Set(items.map(item => item.category.toLowerCase().trim()))];
         setCategories(['all', ...uniqueCategories]);
 
         // Fetch user's favorites if logged in
@@ -109,7 +109,7 @@ export default function MenuSection({ restaurantId }) {
 
   const filteredItems = selectedCategory === 'all'
     ? menuItems
-    : menuItems.filter(item => item.category === selectedCategory);
+    : menuItems.filter(item => item.category.toLowerCase().trim() === selectedCategory.toLowerCase().trim());
 
   if (loading) {
     return (
@@ -118,6 +118,7 @@ export default function MenuSection({ restaurantId }) {
       </section>
     );
   }
+
 
   return (
     <section id="menu" className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50 py-16 border-y">
