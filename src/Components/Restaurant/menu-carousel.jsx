@@ -6,6 +6,7 @@ import "slick-carousel/slick/slick-theme.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../../firebase-config";
+import { getImageSrc } from "../../utils";
 
 const NextArrow = ({ onClick }) => (
   <button
@@ -60,7 +61,9 @@ export default function MenuCarousel({ restaurantId, onCategorySelect }) {
           }
         });
 
-        setCategories(Array.from(categoryMap.values()));
+        const uniqueCategories = Array.from(categoryMap.values());
+        setCategories(uniqueCategories);
+        console.log('Fetched categories:', uniqueCategories); // Debug log
       } catch (error) {
         console.error("Error fetching categories:", error);
       } finally {
@@ -78,10 +81,10 @@ export default function MenuCarousel({ restaurantId, onCategorySelect }) {
   };
 
   const settings = {
-    centerMode: true,
-    infinite: true,
-    centerPadding: "0px",
-    slidesToShow: Math.min(categories.length, 3),
+    centerMode: categories.length > 1, // Disable centerMode for single category
+    infinite: categories.length > 1, // Disable infinite for single category
+    centerPadding: categories.length > 1 ? "0px" : "0px",
+    slidesToShow: categories.length > 1 ? Math.min(categories.length, 3) : 1, // Show 1 slide if only 1 category
     slidesToScroll: 1,
     speed: 500,
     focusOnSelect: true,
@@ -93,9 +96,12 @@ export default function MenuCarousel({ restaurantId, onCategorySelect }) {
         breakpoint: 768,
         settings: {
           slidesToShow: 1,
+          centerMode: false, // Disable centerMode on mobile for clarity
         },
       },
     ],
+    // Ensure horizontal layout
+    className: "flex flex-row items-center",
   };
 
   if (loading) return <div className="text-center py-10">Loading...</div>;
@@ -113,7 +119,7 @@ export default function MenuCarousel({ restaurantId, onCategorySelect }) {
           return (
             <div
               key={item.id}
-              className="px-4 cursor-pointer"
+              className="px-4 cursor-pointer flex-shrink-0" // Prevent vertical stacking
               onClick={() => handleSlideClick(i, item.category)}
             >
               <div className="flex flex-col items-center transition-all duration-300">
@@ -123,7 +129,7 @@ export default function MenuCarousel({ restaurantId, onCategorySelect }) {
                   } bg-gray-100`}
                 >
                   <img
-                    src={item.image || "/assets/placeholder-dish.png"}
+                    src={getImageSrc(item.image, "/assets/placeholder-dish.png")}
                     alt={item.category}
                     className="w-full h-full object-cover"
                   />

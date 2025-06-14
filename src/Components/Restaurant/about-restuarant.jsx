@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { motion } from 'framer-motion';
 import SectionHeading from './section-heading';
+import { getImageSrc } from '../../utils';
 
 export default function AboutRestaurantSection({ restaurantData }) {
 
@@ -25,12 +26,12 @@ export default function AboutRestaurantSection({ restaurantData }) {
           >
             <div className="grid grid-cols-2 gap-4">
               <img
-                src={restaurantData?.images?.[0] || restaurantData?.image || "/assets/placeholder-restaurant.jpg"}
+                src={getImageSrc(restaurantData?.images?.[0], "/assets/images/about-placeholder.jpg")}
                 alt="Restaurant Interior"
                 className="w-full h-64 object-cover rounded-lg shadow-lg"
               />
               <img
-                src={restaurantData?.images?.[1] || restaurantData?.image || "/assets/placeholder-restaurant.jpg"}
+                src={getImageSrc(restaurantData?.images?.[1], "/assets/images/about-placeholder.jpg")}
                 alt="Signature Dish"
                 className="w-full h-64 object-cover rounded-lg shadow-lg mt-8"
               />

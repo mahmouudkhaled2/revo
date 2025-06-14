@@ -3,6 +3,7 @@ import { db } from "../firebase-config";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaStar, FaMapMarkerAlt, FaClock, FaSearch } from 'react-icons/fa';
+import { getImageSrc } from './../utils/index';
 
 // Custom hook for debounced value
 const useDebounce = (value, delay) => {
@@ -135,7 +136,7 @@ export default function ForRestaurants() {
               {/* Restaurant Image */}
               <div className="relative h-48 overflow-hidden">
                 <img
-                  src={restaurant.images?.[0] || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80'}
+                  src={getImageSrc(restaurant.coverUrl, "/public/assets/images/restaurant-placeholder.jpg")}
                   alt={restaurant.name}
                   className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500"
                 />

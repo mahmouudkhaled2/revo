@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../Context/AuthProvider";
 import { useCart } from '../Context/CartContext';
 import { toast } from 'react-hot-toast';
+import { getImageSrc } from "../utils";
 
 export default function MenuSection({ restaurantId }) {
   const [favorites, setFavorites] = useState(new Set());
@@ -35,11 +36,9 @@ export default function MenuSection({ restaurantId }) {
 
         setMenuItems(items);
 
-        // Extract unique categories
         const uniqueCategories = [...new Set(items.map(item => item.category.toLowerCase().trim()))];
         setCategories(['all', ...uniqueCategories]);
 
-        // Fetch user's favorites if logged in
         if (currentUser) {
           const userFavsRef = collection(db, 'users', currentUser.uid, 'favorites');
           const favsSnapshot = await getDocs(userFavsRef);
@@ -119,14 +118,12 @@ export default function MenuSection({ restaurantId }) {
     );
   }
 
-
   return (
     <section id="menu" className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50 py-16 border-y">
       <div className="container max-w-[80%] mx-auto text-center">
         <SectionHeading title={"Our Menu"} />
         <MenuCarousel restaurantId={restaurantId} onCategorySelect={setSelectedCategory} />
 
-        {/* Categories */}
         <div className="flex flex-wrap justify-center gap-4 mt-12 mb-8">
           {categories.map((category) => (
             <button
@@ -142,7 +139,6 @@ export default function MenuSection({ restaurantId }) {
           ))}
         </div>
 
-        {/* Dishes Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-10">
           {filteredItems.length === 0 ? (
             <div className="col-span-full text-center text-gray-500 py-8">
@@ -157,10 +153,9 @@ export default function MenuSection({ restaurantId }) {
                 key={item.id}
                 className="group bg-white p-4 rounded-xl shadow-md hover:shadow-xl transition-all duration-300"
               >
-                {/* Image Container */}
                 <div className="relative overflow-hidden rounded-lg mb-4">
                   <img 
-                    src={item.image || '/assets/placeholder-food.jpg'} 
+                    src={getImageSrc(item.image, '/public/assets/images/placeholder-dish.png')} 
                     alt={item.name} 
                     className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-500"
                   />
@@ -179,7 +174,6 @@ export default function MenuSection({ restaurantId }) {
                   </button>
                 </div>
 
-                {/* Dish Info */}
                 <div className="text-left">
                   <h3 className="font-Grotesk text-lg font-semibold text-gray-800 mb-2">
                     {item.name}

@@ -3,6 +3,7 @@ import AuthProvider from "./Context/AuthProvider";
 import { CartProvider } from "./Context/CartContext";
 import { Toaster } from "react-hot-toast";
 import AppRoutes from "./Routes/AppRoutes";
+import 'leaflet/dist/leaflet.css';
 
 function App() {
   return (

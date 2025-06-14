@@ -1,4 +1,3 @@
-
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useRef } from "react";
@@ -11,14 +10,16 @@ import { FaLocationDot, FaPhone } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase-config';
-
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from "../Context/AuthProvider";
 import Cart from "../Components/Cart/Cart";
-
-// NavItem component with smooth transitions
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { getImageSrc } from "../utils";
+// NavItem component
 const NavItem = ({ label, href, active = false }) => {
   const handleClick = (e) => {
     e.preventDefault();
@@ -26,10 +27,8 @@ const NavItem = ({ label, href, active = false }) => {
     const targetElement = document.getElementById(targetId);
 
     if (targetElement) {
-      const yOffset = -170; // مقدار الإزاحة من الأعلى
-      const y =
-        targetElement.getBoundingClientRect().top + window.scrollY + yOffset;
-
+      const yOffset = -170;
+      const y = targetElement.getBoundingClientRect().top + window.scrollY + yOffset;
       window.scrollTo({ top: y, behavior: "smooth" });
     }
   };
@@ -38,7 +37,7 @@ const NavItem = ({ label, href, active = false }) => {
     <motion.a
       href={href}
       onClick={handleClick}
-      className={`text-white hover:opacity-80 transition-all py-2 text-sm md:text-base relative`}
+      className="text-white hover:opacity-80 transition-all py-2 text-sm md:text-base relative"
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
@@ -56,7 +55,7 @@ const NavItem = ({ label, href, active = false }) => {
   );
 };
 
-
+// RestaurantNavbar component
 const RestaurantNavbar = ({ activeSection, restaurantData }) => {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -76,17 +75,14 @@ const RestaurantNavbar = ({ activeSection, restaurantData }) => {
             whileHover={{ scale: 1.05 }}
           >
             <img
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              src={restaurantData?.logoUrl}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              src={getImageSrc(restaurantData?.logoUrl, '/assets/images/default-restaurant-logo.png')}
               alt={`${restaurantData?.name} Logo`}
               className="w-12 h-12 rounded-full object-cover"
             />
             <span className="text-white text-xl font-medium">{restaurantData?.name}</span>
           </motion.div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-10 space-x-8">
             {navItems.map((item) => (
               <NavItem
@@ -98,7 +94,6 @@ const RestaurantNavbar = ({ activeSection, restaurantData }) => {
             ))}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden text-white"
             onClick={() => setShowMenu(!showMenu)}
@@ -128,7 +123,6 @@ const RestaurantNavbar = ({ activeSection, restaurantData }) => {
           </button>
         </div>
 
-        {/* Mobile Navigation */}
         <AnimatePresence>
           {showMenu && (
             <motion.div
@@ -155,12 +149,13 @@ const RestaurantNavbar = ({ activeSection, restaurantData }) => {
   );
 };
 
+// HeroSection component
 const HeroSection = ({ restaurantData }) => {
   return (
     <div className="relative h-screen">
       <div className="absolute inset-0">
         <img
-          src={restaurantData?.coverUrl || restaurantData?.image}
+          src={getImageSrc(restaurantData?.coverUrl || restaurantData?.image, '/assets/default-cover.jpg')}
           alt="Restaurant Hero"
           className="w-full h-full object-cover"
         />
@@ -194,6 +189,7 @@ const HeroSection = ({ restaurantData }) => {
   );
 };
 
+// ReviewsSection component
 const ReviewsSection = ({ restaurantId }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -253,11 +249,10 @@ const ReviewsSection = ({ restaurantId }) => {
       const reviewsRef = collection(db, 'restaurants', restaurantId, 'comments');
       const docRef = await addDoc(reviewsRef, reviewData);
 
-      // Add the new review to the state
       setReviews(prev => [{
         id: docRef.id,
         ...reviewData,
-        createdAt: new Date() // For immediate display
+        createdAt: new Date()
       }, ...prev]);
 
       setNewReview('');
@@ -284,7 +279,6 @@ const ReviewsSection = ({ restaurantId }) => {
       <div className="container xl:max-w-[80%] mx-auto px-4">
         <SectionHeading title="Customer Reviews" />
         
-        {/* Review Form */}
         <div className="max-w-2xl mx-auto mb-12 bg-white p-6 rounded-lg shadow-md">
           <form onSubmit={handleSubmitReview} className="space-y-4">
             <div>
@@ -325,7 +319,6 @@ const ReviewsSection = ({ restaurantId }) => {
           </form>
         </div>
 
-        {/* Reviews List */}
         <div className="mt-12 space-y-6">
           {reviews.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
@@ -341,7 +334,7 @@ const ReviewsSection = ({ restaurantId }) => {
               >
                 <div className="flex items-center gap-4 mb-4">
                   <img
-                    src={review.userImage}
+                    src={getImageSrc(review.userImage, '/assets/default-avatar.png')}
                     alt={review.userName}
                     className="w-12 h-12 rounded-full object-cover"
                   />
@@ -353,7 +346,7 @@ const ReviewsSection = ({ restaurantId }) => {
                         {'☆'.repeat(5 - review.rating)}
                       </div>
                       <span className="text-sm text-gray-500">
-                        {review.createdAt?.toDate().toLocaleDateString()}
+                        {review.createdAt?.toDate?.().toLocaleDateString() || 'Recent'}
                       </span>
                     </div>
                   </div>
@@ -368,14 +361,27 @@ const ReviewsSection = ({ restaurantId }) => {
   );
 };
 
-const ContactSection = ({ restaurantData }) => {
+// Fix for Leaflet marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+// ContactSection component
+const ContactSection = ({ restaurantData, locationOnMap }) => {
+  // Use locationOnMap if provided, otherwise fall back to restaurantData.geoLocation
+  const lat = locationOnMap?.lat ?? restaurantData?.geoLocation?._lat;
+  const long = locationOnMap?.long ?? restaurantData?.geoLocation?._long;
+  const hasValidCoords = lat !== undefined && long !== undefined && !isNaN(lat) && !isNaN(long);
+
   return (
     <section id="contact" className="min-h-screen py-16 bg-white relative overflow-hidden">
       <div className="container xl:max-w-[80%] mx-auto px-4">
         <SectionHeading title="Contact Us" />
         
         <div className="grid md:grid-cols-2 gap-12 mt-12">
-          {/* Contact Information */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -384,7 +390,7 @@ const ContactSection = ({ restaurantData }) => {
           >
             <h3 className="text-2xl font-bold text-gray-900">Get in Touch</h3>
             <p className="text-gray-600">
-              We&apos;d love to hear from you. Please feel free to contact us for any inquiries.
+              {"We'd love to hear from you. Please feel free to contact us for any inquiries."}
             </p>
             
             <div className="space-y-6">
@@ -426,22 +432,33 @@ const ContactSection = ({ restaurantData }) => {
             </div>
           </motion.div>
 
-          {/* Map */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="bg-gray-100 rounded-lg overflow-hidden h-[400px]"
+            className="bg-gray-100 rounded-lg overflow-hidden h-[400px] relative z-10"
           >
-            {restaurantData?.image ? (
-              <img 
-                src={restaurantData.image} 
-                alt={restaurantData.name} 
-                className="w-full h-full object-cover"
-              />
+            {hasValidCoords ? (
+              <MapContainer
+                center={[lat, long]}
+                zoom={15}
+                style={{ height: '100%', width: '100%' }}
+                className="rounded-lg"
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <Marker position={[lat, long]}>
+                  <Popup>
+                    {restaurantData?.name || 'Restaurant'}<br />
+                    {restaurantData?.address || 'Location'}
+                  </Popup>
+                </Marker>
+              </MapContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500">
-                Location image coming soon
+                Map unavailable: Location coordinates not provided
               </div>
             )}
           </motion.div>
@@ -451,6 +468,7 @@ const ContactSection = ({ restaurantData }) => {
   );
 };
 
+// Main RestaurantPage component
 export default function RestaurantPage() {
   const { restaurant: restaurantId } = useParams();
   const [activeSection, setActiveSection] = useState("");
@@ -530,7 +548,7 @@ export default function RestaurantPage() {
       <AboutRestaurantSection restaurantData={restaurantData} />
       <MenuSection restaurantId={restaurantId} />
       <ReviewsSection restaurantId={restaurantId} />
-      <ContactSection restaurantData={restaurantData} />
+      <ContactSection restaurantData={restaurantData} locationOnMap={{ lat: 30, long: 40 }} />
       <Cart />
     </div>
   );
