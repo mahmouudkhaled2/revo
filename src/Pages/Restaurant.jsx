@@ -8,17 +8,18 @@ import MenuSection from "./RestaurantMenu";
 import { MdEmail } from "react-icons/md";
 import { FaLocationDot, FaPhone } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase-config';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
-import { addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { db } from "../firebase-config";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import { addDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "../Context/AuthProvider";
 import Cart from "../Components/Cart/Cart";
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { getImageSrc } from "../utils";
+import { Helmet } from "react-helmet";
 // NavItem component
 const NavItem = ({ label, href, active = false }) => {
   const handleClick = (e) => {
@@ -28,7 +29,8 @@ const NavItem = ({ label, href, active = false }) => {
 
     if (targetElement) {
       const yOffset = -170;
-      const y = targetElement.getBoundingClientRect().top + window.scrollY + yOffset;
+      const y =
+        targetElement.getBoundingClientRect().top + window.scrollY + yOffset;
       window.scrollTo({ top: y, behavior: "smooth" });
     }
   };
@@ -70,17 +72,22 @@ const RestaurantNavbar = ({ activeSection, restaurantData }) => {
     <header className="bg-black/80 backdrop-blur-sm fixed w-full z-30">
       <nav className="container xl:max-w-[80%] mx-auto py-4 px-4">
         <div className="flex items-center justify-between">
-          <motion.div 
+          <motion.div
             className="flex items-center gap-3"
             whileHover={{ scale: 1.05 }}
           >
             <img
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              src={getImageSrc(restaurantData?.logoUrl, '/assets/images/default-restaurant-logo.png')}
+              src={getImageSrc(
+                restaurantData?.logoUrl,
+                "/assets/images/default-restaurant-logo.png"
+              )}
               alt={`${restaurantData?.name} Logo`}
               className="w-12 h-12 rounded-full object-cover"
             />
-            <span className="text-white text-xl font-medium">{restaurantData?.name}</span>
+            <span className="text-white text-xl font-medium">
+              {restaurantData?.name}
+            </span>
           </motion.div>
 
           <div className="hidden md:flex items-center gap-10 space-x-8">
@@ -155,34 +162,38 @@ const HeroSection = ({ restaurantData }) => {
     <div className="relative h-screen">
       <div className="absolute inset-0">
         <img
-          src={getImageSrc(restaurantData?.coverUrl || restaurantData?.image, '/assets/default-cover.jpg')}
+          src={getImageSrc(
+            restaurantData?.coverUrl || restaurantData?.image,
+            "/assets/default-cover.jpg"
+          )}
           alt="Restaurant Hero"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
         className="relative z-10 h-full flex flex-col items-center justify-center text-white px-4"
       >
-        <motion.h1 
-          className="text-5xl md:text-7xl font-bold mb-6"
+        <motion.h1
+          className="text-5xl md:text-7xl font-bold mb-6 capitalize"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
         >
           {restaurantData?.name}
         </motion.h1>
-        <motion.p 
+        <motion.p
           className="text-xl md:text-2xl text-center max-w-2xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}
         >
-          {restaurantData?.slogan || "Experience the finest traditional cuisine with a modern twist"}
+          {restaurantData?.slogan ||
+            "Experience the finest traditional cuisine with a modern twist"}
         </motion.p>
       </motion.div>
     </div>
@@ -193,7 +204,7 @@ const HeroSection = ({ restaurantData }) => {
 const ReviewsSection = ({ restaurantId }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [newReview, setNewReview] = useState('');
+  const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(5);
   const [submitting, setSubmitting] = useState(false);
   const { currentUser } = useAuth();
@@ -202,12 +213,17 @@ const ReviewsSection = ({ restaurantId }) => {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const reviewsRef = collection(db, 'restaurants', restaurantId, 'comments');
-        const q = query(reviewsRef, orderBy('createdAt', 'desc'));
+        const reviewsRef = collection(
+          db,
+          "restaurants",
+          restaurantId,
+          "comments"
+        );
+        const q = query(reviewsRef, orderBy("createdAt", "desc"));
         const reviewsSnapshot = await getDocs(q);
-        const reviewsData = reviewsSnapshot.docs.map(doc => ({
+        const reviewsData = reviewsSnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
         setReviews(reviewsData);
       } catch (error) {
@@ -224,14 +240,14 @@ const ReviewsSection = ({ restaurantId }) => {
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
-    
+
     if (!currentUser) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
     if (!newReview.trim()) {
-      toast.error('Please write your review');
+      toast.error("Please write your review");
       return;
     }
 
@@ -239,28 +255,36 @@ const ReviewsSection = ({ restaurantId }) => {
     try {
       const reviewData = {
         userId: currentUser.uid,
-        userName: currentUser.displayName || 'Anonymous',
-        userImage: currentUser.photoURL || '/assets/default-avatar.png',
+        userName: currentUser.displayName || "Anonymous",
+        userImage: currentUser.photoURL || "/assets/default-avatar.png",
         comment: newReview.trim(),
         rating,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       };
 
-      const reviewsRef = collection(db, 'restaurants', restaurantId, 'comments');
+      const reviewsRef = collection(
+        db,
+        "restaurants",
+        restaurantId,
+        "comments"
+      );
       const docRef = await addDoc(reviewsRef, reviewData);
 
-      setReviews(prev => [{
-        id: docRef.id,
-        ...reviewData,
-        createdAt: new Date()
-      }, ...prev]);
+      setReviews((prev) => [
+        {
+          id: docRef.id,
+          ...reviewData,
+          createdAt: new Date(),
+        },
+        ...prev,
+      ]);
 
-      setNewReview('');
+      setNewReview("");
       setRating(5);
-      toast.success('Review submitted successfully!');
+      toast.success("Review submitted successfully!");
     } catch (error) {
       console.error("Error submitting review:", error);
-      toast.error('Failed to submit review. Please try again.');
+      toast.error("Failed to submit review. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -278,7 +302,7 @@ const ReviewsSection = ({ restaurantId }) => {
     <section id="reviews" className="min-h-screen py-16 bg-gray-50">
       <div className="container xl:max-w-[80%] mx-auto px-4">
         <SectionHeading title="Customer Reviews" />
-        
+
         <div className="max-w-2xl mx-auto mb-12 bg-white p-6 rounded-lg shadow-md">
           <form onSubmit={handleSubmitReview} className="space-y-4">
             <div>
@@ -291,7 +315,7 @@ const ReviewsSection = ({ restaurantId }) => {
                     onClick={() => setRating(star)}
                     className="text-2xl focus:outline-none"
                   >
-                    {star <= rating ? '★' : '☆'}
+                    {star <= rating ? "★" : "☆"}
                   </button>
                 ))}
               </div>
@@ -311,10 +335,14 @@ const ReviewsSection = ({ restaurantId }) => {
               type="submit"
               disabled={submitting}
               className={`w-full py-2 rounded-lg bg-[#F27141] text-white font-medium 
-                ${submitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#e05f35]'} 
+                ${
+                  submitting
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-[#e05f35]"
+                } 
                 transition-colors`}
             >
-              {submitting ? 'Submitting...' : 'Submit Review'}
+              {submitting ? "Submitting..." : "Submit Review"}
             </button>
           </form>
         </div>
@@ -334,19 +362,25 @@ const ReviewsSection = ({ restaurantId }) => {
               >
                 <div className="flex items-center gap-4 mb-4">
                   <img
-                    src={getImageSrc(review.userImage, '/assets/default-avatar.png')}
+                    src={getImageSrc(
+                      review.userImage,
+                      "/assets/default-avatar.png"
+                    )}
                     alt={review.userName}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                   <div>
-                    <h4 className="font-medium text-gray-900">{review.userName}</h4>
+                    <h4 className="font-medium text-gray-900">
+                      {review.userName}
+                    </h4>
                     <div className="flex items-center gap-2">
                       <div className="text-yellow-400">
-                        {'★'.repeat(review.rating)}
-                        {'☆'.repeat(5 - review.rating)}
+                        {"★".repeat(review.rating)}
+                        {"☆".repeat(5 - review.rating)}
                       </div>
                       <span className="text-sm text-gray-500">
-                        {review.createdAt?.toDate?.().toLocaleDateString() || 'Recent'}
+                        {review.createdAt?.toDate?.().toLocaleDateString() ||
+                          "Recent"}
                       </span>
                     </div>
                   </div>
@@ -364,9 +398,10 @@ const ReviewsSection = ({ restaurantId }) => {
 // Fix for Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 // ContactSection component
@@ -374,13 +409,17 @@ const ContactSection = ({ restaurantData, locationOnMap }) => {
   // Use locationOnMap if provided, otherwise fall back to restaurantData.geoLocation
   const lat = locationOnMap?.lat ?? restaurantData?.geoLocation?._lat;
   const long = locationOnMap?.long ?? restaurantData?.geoLocation?._long;
-  const hasValidCoords = lat !== undefined && long !== undefined && !isNaN(lat) && !isNaN(long);
+  const hasValidCoords =
+    lat !== undefined && long !== undefined && !isNaN(lat) && !isNaN(long);
 
   return (
-    <section id="contact" className="min-h-screen py-16 bg-white relative overflow-hidden">
+    <section
+      id="contact"
+      className="min-h-screen py-16 bg-white relative overflow-hidden"
+    >
       <div className="container xl:max-w-[80%] mx-auto px-4">
         <SectionHeading title="Contact Us" />
-        
+
         <div className="grid md:grid-cols-2 gap-12 mt-12">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -390,9 +429,11 @@ const ContactSection = ({ restaurantData, locationOnMap }) => {
           >
             <h3 className="text-2xl font-bold text-gray-900">Get in Touch</h3>
             <p className="text-gray-600">
-              {"We'd love to hear from you. Please feel free to contact us for any inquiries."}
+              {
+                "We'd love to hear from you. Please feel free to contact us for any inquiries."
+              }
             </p>
-            
+
             <div className="space-y-6">
               {restaurantData?.email && (
                 <div className="flex items-center gap-4">
@@ -405,7 +446,7 @@ const ContactSection = ({ restaurantData, locationOnMap }) => {
                   </div>
                 </div>
               )}
-              
+
               {restaurantData?.phone && (
                 <div className="flex items-center gap-4">
                   <div className="bg-[#F27141] bg-opacity-10 p-3 rounded-full">
@@ -417,7 +458,7 @@ const ContactSection = ({ restaurantData, locationOnMap }) => {
                   </div>
                 </div>
               )}
-              
+
               {restaurantData?.address && (
                 <div className="flex items-center gap-4">
                   <div className="bg-[#F27141] bg-opacity-10 p-3 rounded-full">
@@ -442,7 +483,7 @@ const ContactSection = ({ restaurantData, locationOnMap }) => {
               <MapContainer
                 center={[lat, long]}
                 zoom={15}
-                style={{ height: '100%', width: '100%' }}
+                style={{ height: "100%", width: "100%" }}
                 className="rounded-lg"
               >
                 <TileLayer
@@ -451,8 +492,9 @@ const ContactSection = ({ restaurantData, locationOnMap }) => {
                 />
                 <Marker position={[lat, long]}>
                   <Popup>
-                    {restaurantData?.name || 'Restaurant'}<br />
-                    {restaurantData?.address || 'Location'}
+                    {restaurantData?.name || "Restaurant"}
+                    <br />
+                    {restaurantData?.address || "Location"}
                   </Popup>
                 </Marker>
               </MapContainer>
@@ -480,11 +522,13 @@ export default function RestaurantPage() {
   useEffect(() => {
     const fetchRestaurantData = async () => {
       try {
-        const restaurantDoc = await getDoc(doc(db, "restaurants", restaurantId));
+        const restaurantDoc = await getDoc(
+          doc(db, "restaurants", restaurantId)
+        );
         if (restaurantDoc.exists()) {
           setRestaurantData({
             id: restaurantDoc.id,
-            ...restaurantDoc.data()
+            ...restaurantDoc.data(),
           });
         }
       } catch (error) {
@@ -542,14 +586,29 @@ export default function RestaurantPage() {
   }
 
   return (
-    <div className="bg-white">
-      <RestaurantNavbar activeSection={activeSection} restaurantData={restaurantData} />
-      <HeroSection restaurantData={restaurantData} />
-      <AboutRestaurantSection restaurantData={restaurantData} />
-      <MenuSection restaurantId={restaurantId} />
-      <ReviewsSection restaurantId={restaurantId} />
-      <ContactSection restaurantData={restaurantData} locationOnMap={{ lat: 30, long: 40 }} />
-      <Cart />
-    </div>
+    <>
+      <Helmet>
+        <title>
+          Revo |{" "}
+          {restaurantData?.name?.slice(0, 1).toUpperCase() +
+            restaurantData?.name?.slice(1) || "Restaurant"}
+        </title>
+      </Helmet>
+      <div className="bg-white">
+        <RestaurantNavbar
+          activeSection={activeSection}
+          restaurantData={restaurantData}
+        />
+        <HeroSection restaurantData={restaurantData} />
+        <AboutRestaurantSection restaurantData={restaurantData} />
+        <MenuSection restaurantId={restaurantId} />
+        <ReviewsSection restaurantId={restaurantId} />
+        <ContactSection
+          restaurantData={restaurantData}
+          locationOnMap={{ lat: 30, long: 40 }}
+        />
+        <Cart />
+      </div>
+    </>
   );
 }

@@ -1,9 +1,17 @@
-import { useContext, useEffect, useState } from 'react';
-import Posts from '../Components/Posts';
-import { authContext } from '../Context/AuthProvider';
-import { collection, query, orderBy, getDocs, limit, startAfter } from 'firebase/firestore';
-import { db } from '../firebase-config';
-import { Toaster } from 'react-hot-toast';
+import { useContext, useEffect, useState } from "react";
+import Posts from "../Components/Posts";
+import { authContext } from "../Context/AuthProvider";
+import {
+  collection,
+  query,
+  orderBy,
+  getDocs,
+  limit,
+  startAfter,
+} from "firebase/firestore";
+import { db } from "../firebase-config";
+import { Toaster } from "react-hot-toast";
+import { Helmet } from "react-helmet";
 
 export default function PostsPage() {
   const { currentUser } = useContext(authContext);
@@ -33,9 +41,9 @@ export default function PostsPage() {
       }
 
       const querySnapshot = await getDocs(postsQuery);
-      const fetchedPosts = querySnapshot.docs.map(doc => ({
+      const fetchedPosts = querySnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
 
       // Update last visible document
@@ -68,20 +76,20 @@ export default function PostsPage() {
   useEffect(() => {
     const handleScroll = async () => {
       if (
-        window.innerHeight + document.documentElement.scrollTop
-        === document.documentElement.offsetHeight
+        window.innerHeight + document.documentElement.scrollTop ===
+        document.documentElement.offsetHeight
       ) {
         if (hasMore && !loadingMore && lastVisible) {
           setLoadingMore(true);
           const morePosts = await fetchPosts(lastVisible);
-          setPosts(prevPosts => [...prevPosts, ...morePosts]);
+          setPosts((prevPosts) => [...prevPosts, ...morePosts]);
           setLoadingMore(false);
         }
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [hasMore, loadingMore, lastVisible]);
 
   if (loading) {
@@ -93,51 +101,52 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="min-h-screen py-16">
-      <Toaster 
-        position="top-center"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#333',
-            color: '#fff',
-          },
-          success: {
-            iconTheme: {
-              primary: '#F27141',
-              secondary: '#fff',
+    <>
+      <Helmet>
+        <title>Revo | Posts</title>
+      </Helmet>
+      <div className="min-h-screen py-16">
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: "#333",
+              color: "#fff",
             },
-          },
-        }}
-      />
+            success: {
+              iconTheme: {
+                primary: "#F27141",
+                secondary: "#fff",
+              },
+            },
+          }}
+        />
 
-      {/* Posts list */}
-      <Posts 
-        userId={currentUser?.uid} 
-        posts={posts}
-        setPosts={setPosts}
-      />
+        {/* Posts list */}
+        <Posts userId={currentUser?.uid} posts={posts} setPosts={setPosts} />
 
-      {/* Loading more indicator */}
-      {loadingMore && (
-        <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#F27141]"></div>
-        </div>
-      )}
+        {/* Loading more indicator */}
+        {loadingMore && (
+          <div className="flex justify-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#F27141]"></div>
+          </div>
+        )}
 
-      {/* No more posts message */}
-      {!hasMore && posts.length > 0 && (
-        <div className="text-center text-gray-500 py-4">
-          No more posts to load
-        </div>
-      )}
+        {/* No more posts message */}
+        {!hasMore && posts.length > 0 && (
+          <div className="text-center text-gray-500 py-4">
+            No more posts to load
+          </div>
+        )}
 
-      {/* No posts message */}
-      {!loading && posts.length === 0 && (
-        <div className="text-center text-gray-500 py-4">
-          No posts available
-        </div>
-      )}
-    </div>
+        {/* No posts message */}
+        {!loading && posts.length === 0 && (
+          <div className="text-center text-gray-500 py-4">
+            No posts available
+          </div>
+        )}
+      </div>
+    </>
   );
 }

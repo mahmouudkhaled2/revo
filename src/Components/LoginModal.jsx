@@ -1,9 +1,9 @@
 /* eslint-disable react/prop-types */
-import { IoClose } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
-import LoginForm from './LoginForm';
-import GoogleIcon from './../assets/images/google-color-svgrepo-com.svg'
-import FacebookIcon from './../assets/images/facebook-1-svgrepo-com.svg'
+import { IoClose } from "react-icons/io5";
+import { Link } from "react-router-dom";
+import LoginForm from "./LoginForm";
+// import GoogleIcon from './../assets/images/google-color-svgrepo-com.svg'
+// import FacebookIcon from './../assets/images/facebook-1-svgrepo-com.svg'
 
 export default function LoginModal({ isOpen, onClose, onSuccess }) {
   if (!isOpen) return null;
@@ -22,14 +22,14 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
           Login to Continue
         </h2>
 
-                {/* Login Buttons for Google & Facebook */}
-                <button className="w-full flex justify-center items-center gap-8 border border-[#00000080] text-[#0D0C0C] font-Grotesk font-medium py-2 mb-4">
+        {/* Login Buttons for Google & Facebook */}
+        {/* <button className="w-full flex justify-center items-center gap-8 border border-[#00000080] text-[#0D0C0C] font-Grotesk font-medium py-2 mb-4">
           <img src={GoogleIcon} alt="Google Icon" width={25} />
           Continue with Google
         </button>
 
         <button className="w-full flex justify-center items-center gap-5 bg-blue-800 text-white py-2 mb-4 hover:bg-blue-900 border border-blue-800">
-          <img src={FacebookIcon} alt="Facebook Icon" width={25} /> 
+          <img src={FacebookIcon} alt="Facebook Icon" width={25} />
           Continue with Facebook
         </button>
 
@@ -37,13 +37,13 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
           <span className="before:absolute before:left-0 before:top-1/2 before:w-[45%] before:h-[0.5px] before:bg-[#000000] before:-translate-y-1/2 after:absolute after:right-0 after:top-1/2 after:w-[45%] after:h-[0.5px] after:bg-[#000000] after:-translate-y-1/2">
             OR
           </span>
-        </div>
+        </div> */}
 
         <LoginForm onSuccess={onSuccess} />
 
         {/* Register Link */}
         <p className="text-sm text-center text-gray-700 mt-6">
-          {"Don't have an account?"}{' '}
+          {"Don't have an account?"}{" "}
           <Link
             to="/account-type"
             className="text-[#F27141] hover:text-[#e05f35]"
@@ -55,4 +55,4 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
       </div>
     </div>
   );
-} 
+}

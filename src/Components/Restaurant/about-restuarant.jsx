@@ -49,10 +49,10 @@ export default function AboutRestaurantSection({ restaurantData }) {
             transition={{ duration: 0.8 }}
             className="space-y-6"
           >
-            <h3 className="text-3xl font-bold text-gray-900">
+            <h3 className="text-3xl font-bold text-gray-900 capitalize">
               {restaurantData?.name || "Experience the Taste of Tradition"}
             </h3>
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-gray-600 leading-relaxed capitalize">
               {restaurantData?.description || 
                 "Welcome to our restaurant, where tradition meets innovation. We take pride in serving authentic dishes that have been perfected over generations, while adding our own unique modern twist to create unforgettable dining experiences."}
             </p>

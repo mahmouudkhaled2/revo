@@ -8,6 +8,7 @@ import { authContext } from "../Context/AuthProvider";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { Eye, EyeOff } from "lucide-react"; // For show/hide icons
+import { Helmet } from "react-helmet";
 
 export default function Register() {
   // States
@@ -41,13 +42,13 @@ export default function Register() {
 
   const handleRegister = async (user) => {
     const { name, email, password } = user;
-    const userType = sessionStorage.getItem('userType') || 'user';
+    const userType = sessionStorage.getItem("userType") || "user";
 
     try {
       setError("");
       setIsLoading(true);
       await signUp(name, email, password, userType); // Pass userType to Firebase
-      sessionStorage.removeItem('userType'); // Clean up after registration
+      sessionStorage.removeItem("userType"); // Clean up after registration
       navigate("/login");
       toast.success("Account created successfully");
     } catch (error) {
@@ -75,6 +76,9 @@ export default function Register() {
 
   return (
     <>
+      <Helmet>
+        <title>Revo | Register</title>
+      </Helmet>
       <div className="py-16">
         <div className="max-w-md sm:max-w-lg mx-auto p-6 bg-white rounded-lg shadow-[0_4px_6px_0_rgba(242,113,65,0.3)]">
           <h2 className="text-[34px] font-Grotesk font-semibold text-center text-[#0D0C0C] mb-6">
@@ -191,12 +195,12 @@ export default function Register() {
                 >
                   Password
                 </label>
-
               </div>
-                {formik.touched.password && formik.errors.password &&
-                  <span className="text-red-500 text-sm">
-                    {formik.errors.password}
-                  </span> }
+              {formik.touched.password && formik.errors.password && (
+                <span className="text-red-500 text-sm">
+                  {formik.errors.password}
+                </span>
+              )}
             </div>
 
             {/* Confirm Password Field */}
@@ -209,7 +213,8 @@ export default function Register() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 className={`block py-2.5 px-0 pr-10 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none focus:outline-none focus:ring-0 peer ${
-                  formik.touched.confirmPassword && formik.errors.confirmPassword
+                  formik.touched.confirmPassword &&
+                  formik.errors.confirmPassword
                     ? "border-red-500 focus:border-red-500"
                     : "focus:border-[#F27141]"
                 }`}
@@ -228,11 +233,12 @@ export default function Register() {
               >
                 Confirm Password
               </label>
-              {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                <span className="text-red-500 text-sm">
-                  {formik.errors.confirmPassword}
-                </span>
-              )}
+              {formik.touched.confirmPassword &&
+                formik.errors.confirmPassword && (
+                  <span className="text-red-500 text-sm">
+                    {formik.errors.confirmPassword}
+                  </span>
+                )}
             </div>
 
             {/* Subscribe to Newsletter */}
