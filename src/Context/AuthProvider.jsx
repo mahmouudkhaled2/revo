@@ -11,9 +11,6 @@ export default function AuthProvider ({children}) {
 
     const [userToken, setUserToken] = useState(localStorage.getItem('userToken') ? localStorage.getItem('userToken') : null);
 
-    const [users, setUsers] = useState(localStorage.getItem('users') ? JSON.parse(localStorage.getItem('users')) : []);
-    
-
     const [currentUser, setCurrentUsers] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -60,7 +57,7 @@ export default function AuthProvider ({children}) {
     }, [])
 
     return (
-        <authContext.Provider value={{userToken, setUserToken, users, setUsers, currentUser, signUp, signIn, logout}}>
+        <authContext.Provider value={{userToken, setUserToken, currentUser, signUp, signIn, logout}}>
             {!loading && children}
         </authContext.Provider>
     )

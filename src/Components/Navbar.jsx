@@ -4,14 +4,45 @@ import { useContext, useState, useRef, useEffect } from "react";
 import { authContext } from "../Context/AuthProvider";
 import { FaHeart, FaShoppingBag, FaUserCircle, FaChevronDown } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase-config";
 
 export default function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const { userToken, currentUser, logout } = useContext(authContext);
-
+  const [userName, setUserName] = useState("");
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+
+  // Fetch user name from Firestore
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (!currentUser?.uid) {
+        setUserName("");
+        return;
+      }
+
+      try {
+        console.log("Fetching user name for UID:", currentUser.uid);
+        const userDoc = doc(db, "users", currentUser.uid); // Reference user document
+        const userSnap = await getDoc(userDoc);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          console.log("User data:", userData);
+          setUserName(userData.name || "User");
+        } else {
+          console.error("No user document found!");
+          setUserName(currentUser?.displayName || "User");
+        }
+      } catch (error) {
+        console.error("Error fetching user name:", error);
+        setUserName(currentUser?.displayName || "");
+      }
+      };
+
+    fetchUserName();
+  }, [currentUser]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -54,7 +85,7 @@ export default function Navbar() {
                     >
                       <FaUserCircle className="text-xl sm:text-2xl" />
                       <span className="hidden sm:block text-sm sm:text-base">
-                        {currentUser?.displayName || 'User'}
+                        {userName}
                       </span>
                       <FaChevronDown className={`text-sm transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
                     </button>
