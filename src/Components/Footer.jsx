@@ -3,7 +3,7 @@ import Logo from './../assets/images/revo-white-logo.svg'
 
 export default function Footer() {
   return (
-    <footer className="bg-black">
+    <footer className="bg-black relative z-10">
         <div className='container xl:max-w-[80%] mx-auto'>
             <div className='flex flex-col md:flex-row justify-between items-center gap-10 md:gap-0 py-16 px-6'>
                 <img src={Logo} alt="Logo" className='max-w-[160px]' />
@@ -11,7 +11,7 @@ export default function Footer() {
                 <div className='flex flex-col sm:flex-row items-center gap-16'>
                     <ul className='flex items-center gap-6'>
                         <li>
-                            <Link to={'/'} className="text-white text-sm">Home</Link>
+                            <Link to={'/ '} className="text-white text-sm">Home</Link>
                         </li>
 
                         <li>

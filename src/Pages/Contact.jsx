@@ -46,8 +46,8 @@ export default function ContactPage() {
       <Helmet>
         <title>Revo | Contact Us</title>
       </Helmet> 
-      <div className="h-[80vh] flex items-center justify-center bg-gradient-to-b from-white to-gray-50">
-        <div className="container max-w-[80%] mx-auto px-4">
+      <div className="flex items-center justify-center bg-gradient-to-b from-white to-gray-50 pb-10">
+        <div className="container max-w-[80%] mx-auto px-4 pt-10">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

@@ -18,6 +18,7 @@ import {
 import { db } from "../firebase-config";
 import { authContext } from "../Context/AuthProvider";
 import LoginModal from "./LoginModal";
+import { getImageSrc } from './../utils/index';
 
 export default function Post({ post }) {
   const [isLiked, setIsLiked] = useState(false);
@@ -289,7 +290,7 @@ export default function Post({ post }) {
             <div className="mt-4 border-t pt-3">
               <div className="flex items-start gap-2">
                 <img
-                  src="/assets/images/default-user.png"
+                  src={getImageSrc(comments[0]?.image, "/assets/images/default-user.png")}
                   alt="User"
                   className="w-8 h-8 rounded-full"
                 />
@@ -343,7 +344,7 @@ export default function Post({ post }) {
                 localComments?.map((comment) => (
                   <div key={comment.id} className="flex items-start gap-3 mb-4">
                     <img
-                      src="/assets/images/default-user.png"
+                      src={getImageSrc(comments[0]?.image, "/assets/images/default-user.png")}
                       alt="User"
                       className="w-10 h-10 rounded-full"
                     />

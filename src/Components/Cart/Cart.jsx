@@ -5,6 +5,7 @@ import { FaShoppingCart, FaMinus, FaPlus, FaTimes } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthProvider';
 import { toast } from 'react-hot-toast';
+import { getImageSrc } from '../../utils';
 
 export default function Cart() {
   const { 
@@ -120,7 +121,7 @@ export default function Cart() {
                         className="flex items-center gap-4 bg-white p-4 rounded-lg shadow"
                       >
                         <img
-                          src={item.image}
+                          src={getImageSrc(item.image, "/assets/images/placeholder-dish.png")}
                           alt={item.name}
                           className="w-20 h-20 object-cover rounded-lg"
                         />
