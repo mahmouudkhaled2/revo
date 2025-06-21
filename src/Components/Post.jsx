@@ -18,7 +18,7 @@ import {
 import { db } from "../firebase-config";
 import { authContext } from "../Context/AuthProvider";
 import LoginModal from "./LoginModal";
-import { getImageSrc } from './../utils/index';
+import { getImageSrc } from "./../utils/index";
 
 export default function Post({ post }) {
   const [isLiked, setIsLiked] = useState(false);
@@ -30,17 +30,17 @@ export default function Post({ post }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [restaurantData, setRestaurantData] = useState(null);
+  const [userImage, setUserImage] = useState("");
 
   const { currentUser } = useContext(authContext);
 
   const id = post?.id;
   const restaurantId = post?.restaurantId;
-  const restaurantName = post?.restaurantName;
+  const restaurantName = restaurantData?.name;
   const description = post?.description;
   const image = `data:image/jpeg;base64,${post?.image}`;
   const restaurantImage = `data:image/jpeg;base64,${restaurantData?.logoUrl}`;
   const createdAt = post?.createdAt;
-  const comments = post?.comments;
 
   useEffect(() => {
     const fetchRestaurantData = async () => {
@@ -62,9 +62,8 @@ export default function Post({ post }) {
     if (restaurantId) {
       fetchRestaurantData();
     }
-  }, [restaurantId, restaurantData]);
+  }, [restaurantId]);
 
-  // Check if the current user has liked this post
   useEffect(() => {
     const checkIfLiked = async () => {
       if (!currentUser) {
@@ -75,6 +74,7 @@ export default function Post({ post }) {
       try {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         const userData = userDoc.data();
+        setUserImage(userData?.image);
         setIsLiked(userData?.likedPosts?.includes(id) || false);
       } catch (error) {
         console.error("Error checking like status:", error);
@@ -100,26 +100,21 @@ export default function Post({ post }) {
       const userRef = doc(db, "users", currentUser.uid);
       const postRef = doc(db, "posts", id);
 
-      // Update like count in post document
       const newLikeStatus = !isLiked;
       const newLikesCount = newLikeStatus ? localLikes + 1 : localLikes - 1;
 
-      // Update local state
       setIsLiked(newLikeStatus);
       setLocalLikes(newLikesCount);
 
-      // Update post likes count
       await updateDoc(postRef, {
         likes: newLikesCount,
       });
 
-      // Update user's likedPosts array
       await updateDoc(userRef, {
         likedPosts: newLikeStatus ? arrayUnion(id) : arrayRemove(id),
       });
     } catch (error) {
       console.error("Error updating like status:", error);
-      // Revert local state on error
       setIsLiked(!isLiked);
       setLocalLikes(isLiked ? localLikes + 1 : localLikes - 1);
     }
@@ -133,53 +128,43 @@ export default function Post({ post }) {
     setIsSubmitting(true);
 
     try {
-      // Fetch user name from Firestore
       let userName = currentUser.displayName || "User";
       if (currentUser?.uid) {
-        console.log("Fetching user name for UID:", currentUser.uid);
         const userDoc = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userDoc);
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          console.log("User data:", userData);
           userName = userData.name || userName;
-        } else {
-          console.error("No user document found!");
+          setUserImage(userData?.image);
         }
       }
 
       const commentData = {
-        userName: userName,
+        userName,
         userId: currentUser.uid,
+        image: userImage,
         text: newComment.trim(),
         createdAt: Timestamp.now(),
       };
 
-      // Add comment to Firebase subcollection
       const commentsRef = collection(db, "posts", id, "comments");
       const docRef = await addDoc(commentsRef, commentData);
 
-      // Add the ID to the comment data
       const commentWithId = {
         ...commentData,
         id: docRef.id,
       };
 
-      // Update local state
       setLocalComments((prevComments) => [...prevComments, commentWithId]);
       setNewComment("");
     } catch (error) {
       console.error("Error adding comment:", error);
-      // Revert local state on error
-      setLocalComments((prevComments) => prevComments.slice(0, -1));
-      setNewComment(newComment);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleLoginSuccess = () => {
-    // Execute pending action after successful login
     if (pendingAction === "like") {
       handleLike();
     } else if (pendingAction === "comment") {
@@ -195,8 +180,6 @@ export default function Post({ post }) {
     try {
       const commentRef = doc(db, "posts", id, "comments", commentId);
       await deleteDoc(commentRef);
-
-      // Update local state
       setLocalComments((prevComments) =>
         prevComments.filter((comment) => comment.id !== commentId)
       );
@@ -209,30 +192,9 @@ export default function Post({ post }) {
     ? formatDistanceToNow(createdAt.toDate(), { addSuffix: true })
     : "recently";
 
-  const renderInteractionPrompt = () => {
-    if (!currentUser) {
-      return (
-        <div className="mt-4 border-t pt-4">
-          <p className="text-gray-600 text-sm mb-3">
-            Want to like or comment on this post? Login to join the
-            conversation!
-          </p>
-          <button
-            onClick={() => setShowLoginModal(true)}
-            className="text-[#F27141] hover:text-[#e05f35] font-medium text-sm"
-          >
-            Log in now
-          </button>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <>
       <div className="bg-white rounded-xl shadow-md overflow-hidden my-8">
-        {/* Restaurant Header */}
         <div className="p-4 flex items-center gap-4 border-b">
           <img
             src={restaurantImage}
@@ -247,16 +209,13 @@ export default function Post({ post }) {
           </div>
         </div>
 
-        {/* Post Image */}
         <div className="relative aspect-video">
           <img src={image} alt="Post" className="w-full h-full object-cover" />
         </div>
 
-        {/* Post Content */}
         <div className="p-4">
           <p className="text-gray-800 text-lg mb-4">{description}</p>
 
-          {/* Interactions */}
           <div className="flex items-center gap-6">
             <button
               onClick={currentUser ? handleLike : () => setShowLoginModal(true)}
@@ -279,36 +238,33 @@ export default function Post({ post }) {
               className="flex items-center gap-2 text-lg text-gray-600 hover:text-gray-800"
             >
               <FaRegComment className="text-2xl" />
-              <span>{comments?.length}</span>
+              <span>{localComments.length}</span>
             </button>
           </div>
 
-          {renderInteractionPrompt()}
-
-          {/* Latest Comment Preview - Only show if there are comments */}
-          {comments?.length > 0 && (
+          {localComments?.length > 0 && (
             <div className="mt-4 border-t pt-3">
               <div className="flex items-start gap-2">
                 <img
-                  src={getImageSrc(comments[0]?.image, "/assets/images/default-user.png")}
+                  src={getImageSrc(localComments[0]?.image, "/assets/images/default-user.png")}
                   alt="User"
                   className="w-8 h-8 rounded-full"
                 />
                 <div>
                   <p className="text-sm">
                     <span className="font-semibold">
-                      {comments[0]?.userName}
+                      {localComments[0]?.userName}
                     </span>{" "}
-                    {comments[0]?.text}
+                    {localComments[0]?.text}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {formatDistanceToNow(comments[0]?.createdAt?.toDate(), {
+                    {formatDistanceToNow(localComments[0]?.createdAt?.toDate(), {
                       addSuffix: true,
                     })}
                   </p>
                 </div>
               </div>
-              {comments?.length > 1 && (
+              {localComments.length > 1 && (
                 <button
                   onClick={
                     currentUser
@@ -317,7 +273,7 @@ export default function Post({ post }) {
                   }
                   className="text-gray-500 text-sm mt-2 hover:text-gray-700"
                 >
-                  View all {comments.length} comments
+                  View all {localComments.length} comments
                 </button>
               )}
             </div>
@@ -325,7 +281,6 @@ export default function Post({ post }) {
         </div>
       </div>
 
-      {/* Comments Modal */}
       {showComments && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
@@ -341,11 +296,11 @@ export default function Post({ post }) {
 
             <div className="overflow-y-auto p-4 max-h-[60vh]">
               {localComments?.length > 0 ? (
-                localComments?.map((comment) => (
+                localComments.map((comment) => (
                   <div key={comment.id} className="flex items-start gap-3 mb-4">
                     <img
-                      src={getImageSrc(comments[0]?.image, "/assets/images/default-user.png")}
-                      alt="User"
+                      src={getImageSrc(comment.image, "/assets/images/default-user.png")}
+                      alt={comment.userName}
                       className="w-10 h-10 rounded-full"
                     />
                     <div className="flex-1">
@@ -380,7 +335,6 @@ export default function Post({ post }) {
               )}
             </div>
 
-            {/* Comment Input */}
             <div className="border-t p-4">
               {currentUser ? (
                 <form onSubmit={handleCommentSubmit} className="flex gap-2">
@@ -422,7 +376,6 @@ export default function Post({ post }) {
         </div>
       )}
 
-      {/* Login Modal */}
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}

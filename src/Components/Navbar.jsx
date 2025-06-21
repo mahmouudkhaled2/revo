@@ -2,16 +2,18 @@ import { NavLink, useNavigate } from "react-router-dom";
 import logo from "./../assets/images/revo-logo.png";
 import { useContext, useState, useRef, useEffect } from "react";
 import { authContext } from "../Context/AuthProvider";
-import { FaHeart, FaShoppingBag, FaUserCircle, FaChevronDown } from 'react-icons/fa';
+import { FaHeart, FaShoppingBag, FaChevronDown } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase-config";
+import { getImageSrc } from "../utils";
 
 export default function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const { userToken, currentUser, logout } = useContext(authContext);
   const [userName, setUserName] = useState("");
+  const [userImage, setUserImage] = useState("");
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
@@ -24,13 +26,12 @@ export default function Navbar() {
       }
 
       try {
-        console.log("Fetching user name for UID:", currentUser.uid);
         const userDoc = doc(db, "users", currentUser.uid); // Reference user document
         const userSnap = await getDoc(userDoc);
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          console.log("User data:", userData);
           setUserName(userData.name || "User");
+          setUserImage(userData.image)
         } else {
           console.error("No user document found!");
           setUserName(currentUser?.displayName || "User");
@@ -83,11 +84,12 @@ export default function Navbar() {
                       onClick={() => setShowDropdown(!showDropdown)}
                       className="flex items-center gap-1 sm:gap-2 text-white hover:opacity-90 transition-opacity"
                     >
-                      <FaUserCircle className="text-xl sm:text-2xl" />
+                      <FaChevronDown className={`text-sm transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
+                      {/* <FaUserCircle className="text-xl sm:text-2xl" /> */}
                       <span className="hidden sm:block text-sm sm:text-base">
                         {userName}
                       </span>
-                      <FaChevronDown className={`text-sm transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
+                      <img src={getImageSrc(userImage, "/assets/images/default-user.png")} alt="" className="size-9 rounded-full" />
                     </button>
 
                     <AnimatePresence>

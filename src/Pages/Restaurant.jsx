@@ -8,18 +8,15 @@ import MenuSection from "./RestaurantMenu";
 import { MdEmail } from "react-icons/md";
 import { FaLocationDot, FaPhone } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase-config";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
-import { addDoc, query, orderBy, serverTimestamp } from "firebase/firestore";
-import { useAuth } from "../Context/AuthProvider";
 import Cart from "../Components/Cart/Cart";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getImageSrc } from "../utils";
 import { Helmet } from "react-helmet";
+import ReviewsSection from "../Components/Restaurant/ReviewsSection";
 // NavItem component
 const NavItem = ({ label, href, active = false }) => {
   const handleClick = (e) => {
@@ -197,201 +194,6 @@ const HeroSection = ({ restaurantData }) => {
         </motion.p>
       </motion.div>
     </div>
-  );
-};
-
-// ReviewsSection component
-const ReviewsSection = ({ restaurantId }) => {
-  const [reviews, setReviews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [newReview, setNewReview] = useState("");
-  const [rating, setRating] = useState(5);
-  const [submitting, setSubmitting] = useState(false);
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const reviewsRef = collection(
-          db,
-          "restaurants",
-          restaurantId,
-          "comments"
-        );
-        const q = query(reviewsRef, orderBy("createdAt", "desc"));
-        const reviewsSnapshot = await getDocs(q);
-        const reviewsData = reviewsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setReviews(reviewsData);
-      } catch (error) {
-        console.error("Error fetching reviews:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (restaurantId) {
-      fetchReviews();
-    }
-  }, [restaurantId]);
-
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
-
-    if (!currentUser) {
-      navigate("/login");
-      return;
-    }
-
-    if (!newReview.trim()) {
-      toast.error("Please write your review");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const reviewData = {
-        userId: currentUser.uid,
-        userName: currentUser.displayName || "Anonymous",
-        userImage: currentUser.photoURL || "/assets/default-avatar.png",
-        comment: newReview.trim(),
-        rating,
-        createdAt: serverTimestamp(),
-      };
-
-      const reviewsRef = collection(
-        db,
-        "restaurants",
-        restaurantId,
-        "comments"
-      );
-      const docRef = await addDoc(reviewsRef, reviewData);
-
-      setReviews((prev) => [
-        {
-          id: docRef.id,
-          ...reviewData,
-          createdAt: new Date(),
-        },
-        ...prev,
-      ]);
-
-      setNewReview("");
-      setRating(5);
-      toast.success("Review submitted successfully!");
-    } catch (error) {
-      console.error("Error submitting review:", error);
-      toast.error("Failed to submit review. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F27141]"></div>
-      </div>
-    );
-  }
-
-  return (
-    <section id="reviews" className="min-h-screen py-16 bg-gray-50">
-      <div className="container xl:max-w-[80%] mx-auto px-4">
-        <SectionHeading title="Customer Reviews" />
-
-        <div className="max-w-2xl mx-auto mb-12 bg-white p-6 rounded-lg shadow-md">
-          <form onSubmit={handleSubmitReview} className="space-y-4">
-            <div>
-              <label className="block text-gray-700 mb-2">Rating</label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRating(star)}
-                    className="text-2xl focus:outline-none"
-                  >
-                    {star <= rating ? "★" : "☆"}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-2">Your Review</label>
-              <textarea
-                value={newReview}
-                onChange={(e) => setNewReview(e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F27141]"
-                rows="4"
-                placeholder="Share your experience..."
-                disabled={submitting}
-              ></textarea>
-            </div>
-            <button
-              type="submit"
-              disabled={submitting}
-              className={`w-full py-2 rounded-lg bg-[#F27141] text-white font-medium 
-                ${
-                  submitting
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-[#e05f35]"
-                } 
-                transition-colors`}
-            >
-              {submitting ? "Submitting..." : "Submit Review"}
-            </button>
-          </form>
-        </div>
-
-        <div className="mt-12 space-y-6">
-          {reviews.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              No reviews yet. Be the first to review!
-            </div>
-          ) : (
-            reviews.map((review) => (
-              <motion.div
-                key={review.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white p-6 rounded-lg shadow-md"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <img
-                    src={getImageSrc(
-                      review.userImage,
-                      "/assets/default-avatar.png"
-                    )}
-                    alt={review.userName}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <h4 className="font-medium text-gray-900">
-                      {review.userName}
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <div className="text-yellow-400">
-                        {"★".repeat(review.rating)}
-                        {"☆".repeat(5 - review.rating)}
-                      </div>
-                      <span className="text-sm text-gray-500">
-                        {review.createdAt?.toDate?.().toLocaleDateString() ||
-                          "Recent"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-gray-600">{review.comment}</p>
-              </motion.div>
-            ))
-          )}
-        </div>
-      </div>
-    </section>
   );
 };
 
