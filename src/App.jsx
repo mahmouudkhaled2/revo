@@ -10,7 +10,7 @@ function App() {
     <Router>
       <AuthProvider>
         <CartProvider>
-          <Toaster position="top-center" />
+          <Toaster position="bottom-right" />
           <AppRoutes />
         </CartProvider>
       </AuthProvider>
