@@ -213,9 +213,6 @@ const ContactSection = ({ restaurantData }) => {
   const long = restaurantData?.geoLocation?._long;
   const hasValidCoords =
     lat !== undefined && long !== undefined && !isNaN(lat) && !isNaN(long);
-  console.log("_lat: ", restaurantData?.geoLocation);
-  console.log("long: ", long);
-  
   return (
     <section
       id="contact"

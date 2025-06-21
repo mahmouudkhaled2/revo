@@ -19,6 +19,7 @@ import { db } from "../firebase-config";
 import { authContext } from "../Context/AuthProvider";
 import LoginModal from "./LoginModal";
 import { getImageSrc } from "./../utils/index";
+import { useNavigate } from "react-router-dom";
 
 export default function Post({ post }) {
   const [isLiked, setIsLiked] = useState(false);
@@ -32,6 +33,8 @@ export default function Post({ post }) {
   const [restaurantData, setRestaurantData] = useState(null);
   const [userImage, setUserImage] = useState("");
 
+  // Navigation
+  const navigate = useNavigate();
   const { currentUser } = useContext(authContext);
 
   const id = post?.id;
@@ -202,9 +205,9 @@ export default function Post({ post }) {
             className="w-12 h-12 rounded-full object-cover"
           />
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <button type="button" onClick={() => navigate(`/for-restaurants/${restaurantId}`)} className="text-lg border-none outline-none font-semibold text-gray-900 hover:underline">
               {restaurantName}
-            </h3>
+            </button>
             <p className="text-sm text-gray-500">{timeAgo}</p>
           </div>
         </div>
