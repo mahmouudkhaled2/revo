@@ -207,13 +207,15 @@ L.Icon.Default.mergeOptions({
 });
 
 // ContactSection component
-const ContactSection = ({ restaurantData, locationOnMap }) => {
+const ContactSection = ({ restaurantData }) => {
   // Use locationOnMap if provided, otherwise fall back to restaurantData.geoLocation
-  const lat = locationOnMap?.lat ?? restaurantData?.geoLocation?._lat;
-  const long = locationOnMap?.long ?? restaurantData?.geoLocation?._long;
+  const lat = restaurantData?.geoLocation?._lat;
+  const long = restaurantData?.geoLocation?._long;
   const hasValidCoords =
     lat !== undefined && long !== undefined && !isNaN(lat) && !isNaN(long);
-
+  console.log("_lat: ", restaurantData?.geoLocation);
+  console.log("long: ", long);
+  
   return (
     <section
       id="contact"
@@ -405,10 +407,7 @@ export default function RestaurantPage() {
         <AboutRestaurantSection restaurantData={restaurantData} />
         <MenuSection restaurantId={restaurantId} />
         <ReviewsSection restaurantId={restaurantId} />
-        <ContactSection
-          restaurantData={restaurantData}
-          locationOnMap={{ lat: 30, long: 40 }}
-        />
+        <ContactSection restaurantData={restaurantData} />
         <Cart />
       </div>
     </>
