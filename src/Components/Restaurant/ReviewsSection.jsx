@@ -94,7 +94,7 @@ const ReviewsSection = ({ restaurantId }) => {
     setSubmitting(true);
     try {
       const response = await fetch(
-        "https://comment-rating-production-d006.up.railway.app/predict",
+        "https://comment-rating-final-production.up.railway.app/predict",
         {
           method: "POST",
           headers: {
@@ -105,6 +105,7 @@ const ReviewsSection = ({ restaurantId }) => {
         }
       );
       const result = await response.json();
+      
       const isPositive = result.predicted_rating === 1;
 
       const reviewData = {

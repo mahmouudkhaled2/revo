@@ -63,7 +63,6 @@ export default function MenuCarousel({ restaurantId, onCategorySelect }) {
 
         const uniqueCategories = Array.from(categoryMap.values());
         setCategories(uniqueCategories);
-        console.log('Fetched categories:', uniqueCategories); // Debug log
       } catch (error) {
         console.error("Error fetching categories:", error);
       } finally {
