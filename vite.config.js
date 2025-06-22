@@ -5,7 +5,7 @@
   export default defineConfig({
     plugins: [react()],
     server: {
-      // middlewareMode: true,
+      middlewareMode: true,
     },
     configureServer: (server) => {
       server.middlewares.use(history());
