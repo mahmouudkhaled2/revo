@@ -395,7 +395,7 @@ export default function RestaurantPage() {
             restaurantData?.name?.slice(1) || "Restaurant"}
         </title>
       </Helmet>
-      <div className="bg-white">
+      <div className="bg-white overflow-x-hidden">
         <RestaurantNavbar
           activeSection={activeSection}
           restaurantData={restaurantData}
