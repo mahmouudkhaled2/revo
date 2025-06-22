@@ -6,13 +6,6 @@
     plugins: [react()],
     server: {
       // middlewareMode: true,
-      // proxy: {
-      //   "/predict": {
-      //     target: "https://comment-rating-final-production.up.railway.app",
-      //     changeOrigin: true,
-      //     rewrite: (path) => path.replace(/^\/predict/, "/predict"),
-      //   },
-      // },
     },
     configureServer: (server) => {
       server.middlewares.use(history());
